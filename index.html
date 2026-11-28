@@ -1483,11 +1483,6 @@ img.ev-ic { width: 18px; height: 18px; vertical-align: -4px; margin-right: 4px; 
       <p class="form-info" id="auth-info" role="status" hidden></p>
       <button class="btn btn-primary" id="auth-submit" type="submit">Giriş Yap</button>
     </form>
-    <div class="or" id="auth-or">veya</div>
-    <button class="gbtn" id="google-btn" type="button">
-      <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-      <span id="google-label">Google ile Giriş Yap</span>
-    </button>
     <p class="modal-foot" id="auth-switch"></p>
     <p class="local-note" id="local-note" hidden>Önizleme: hesaplar bu tarayıcıda saklanır.</p>
   </div>
@@ -2231,7 +2226,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     if (email) pendingEmail = email;
     var eksik = birth ? eksikBilgiler() : {};
     var show = { "f-name-wrap": up, "f-okul-wrap": up || !!eksik.okul, "f-birth-wrap": up || !!eksik.dogum, "f-email-wrap": up || si, "f-pass-wrap": up || si || np, "f-code-wrap": code,
-      "btn-forgot": si, "btn-resend": code, "auth-or": up || si, "google-btn": up || si, "auth-switch": up || si || code || birth, "auth-close": !birth };
+      "btn-forgot": si, "btn-resend": code, "auth-switch": up || si || code || birth, "auth-close": !birth };
     Object.keys(show).forEach(function (id) { $(id).hidden = !show[id]; });
     $("auth-title").textContent = up ? "Kayıt Ol" : si ? "Giriş Yap" : np ? "Yeni şifre" : code ? "E-postanı doğrula" : "Eksik bilgiler";
     $("auth-lead").textContent = np ? "Hesabın için yeni bir şifre belirle." :
@@ -2242,7 +2237,6 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     $("f-pass").setAttribute("autocomplete", up || np ? "new-password" : "current-password");
     $("f-pass").placeholder = up || np ? "En az 8 karakter, harf ve rakam" : "";
     $("f-birth").max = isoDate(yasSiniri());
-    $("google-label").textContent = up ? "Google ile Kayıt Ol" : "Google ile Giriş Yap";
     $("auth-switch").innerHTML = up ? 'Zaten hesabın var mı? <button type="button" class="link-btn" data-mode="signin">Giriş Yap</button>' :
       code ? '<button type="button" class="link-btn" data-mode="signin">Farklı bir e-posta ile giriş yap</button>' :
       birth ? '<button type="button" class="link-btn" data-logout="1">Çıkış yap</button>' :
@@ -2274,7 +2268,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     $("auth-error").textContent = err; $("auth-error").hidden = !err;
     $("auth-info").textContent = info; $("auth-info").hidden = !info;
   }
-  function busy(b) { $("auth-submit").disabled = b; $("google-btn").disabled = b; }
+  function busy(b) { $("auth-submit").disabled = b; }
   $("btn-signup").addEventListener("click", function () { openAuth("signup"); });
   $("btn-signin").addEventListener("click", function () { openAuth("signin"); });
   $("auth-switch").addEventListener("click", function (e) {
@@ -2340,12 +2334,6 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     var kalan = Math.ceil((resendUntil - Date.now()) / 1000);
     if (kalan > 0) return msg("", "Yeni kod için " + kalan + " saniye bekle.");
     Veri.resendCode(pendingEmail).then(function () { resendUntil = Date.now() + 60000; msg("", "Yeni kod gönderildi."); }).catch(function (err) { msg(errText(err), ""); });
-  });
-  $("google-btn").addEventListener("click", function () {
-    msg("", ""); busy(true);
-    welcome = "Giriş yapıldı.";
-    Veri.google().catch(function (err) { welcome = ""; msg(errText(err), ""); })
-      .then(function () { busy(false); });
   });
   $("btn-forgot").addEventListener("click", function () {
     var email = $("f-email").value.trim().toLowerCase();
