@@ -890,6 +890,10 @@ body.in-app::before { content: ""; position: fixed; inset: 0 0 auto; height: env
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 .who { min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
 .who strong { font-size: .95rem; }
+.kisi-av { border: 0; padding: 0; background: none; border-radius: 50%; flex: none; cursor: pointer; display: block; }
+.kisi-ad { border: 0; padding: 0; background: none; font: inherit; font-weight: 700; color: inherit; cursor: pointer; text-align: left; }
+.who .kisi-ad { font-size: .95rem; }
+.kisi-ad:hover { text-decoration: underline; }
 .place-link { border: 0; background: none; padding: 0; text-align: left; color: var(--muted); font-size: .86rem; display: inline-flex; gap: 4px; align-items: center; min-width: 0; }
 .place-link span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .place-link:hover span { text-decoration: underline; }
@@ -1861,6 +1865,12 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       markRead: function (uid) { return sb.from("mesajlar").update({ okundu: true }).eq("alici_id", current.uid).eq("gonderen_id", uid).eq("okundu", false).then(chk); },
       storage: function () { return sb.rpc("depolama_durumu").then(chk); },
       access: function () { return erisim(); },
+      getProfile: function (uid) {
+        function al(cols) { return sb.from("profiller").select(cols).eq("id", uid).maybeSingle(); }
+        return al("ad,bio,foto_url,rol,olusturma,ilgi_alanlari").then(function (r) { return r.error ? al("ad,bio,foto_url,rol,olusturma") : r; }).then(chk).then(function (r) {
+          return r ? { ad: r.ad, bio: r.bio || "", foto: r.foto_url || "", rol: r.rol, ilgi: r.ilgi_alanlari || [], t: Date.parse(r.olusturma) } : null;
+        });
+      },
       userIps: function (uid) {
         return sb.rpc("yonetici_ip_listesi", { uid: uid }).then(chk).then(function (rows) {
           return (rows || []).map(function (r) { return { ag: r.ag, t: Date.parse(r.son), paylasan: r.paylasan, yasakli: r.yasakli }; });
@@ -2051,6 +2061,11 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       markRead: function (uid) { var me = USER.uid, list = store.get("tg_mesajlar", []); list.forEach(function (m) { if (m.to === me && m.from === uid) m.okundu = true; }); store.set("tg_mesajlar", list); return Promise.resolve(); },
       storage: function () { return Promise.resolve(null); },
       access: function () { return Promise.resolve({ engelli: false }); },
+      getProfile: function (uid) {
+        var all = users(), e = uid.replace(/^yerel-/, ""), u = all[e]; if (!u) return Promise.resolve(null);
+        var pr = store.get("tg_profil_" + uid, {});
+        return Promise.resolve({ ad: pr.ad || u.name, bio: pr.bio || "", foto: pr.foto || "", rol: u.rol, ilgi: pr.ilgi || [], t: u.created });
+      },
       userIps: function () { return Promise.resolve([]); },
       banUser: function (uid) { return this.setUser(uid, "yasakli", true); },
       unbanUser: function (uid) { return this.setUser(uid, "yasakli", false); },
@@ -2121,11 +2136,11 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
   function person(k) { return DATA.kullanicilar[k]; }
   function likeCount(p) { return p.begeni + (ST.liked[p.id] ? 1 : 0); }
   function allComments(p) {
-    var seed = p.yorumlar.map(function (c) { var u = person(c.kim); return { name: u.ad, color: u.renk, text: c.metin, when: c.zaman }; });
+    var seed = p.yorumlar.map(function (c) { var u = person(c.kim); return { kisi: "ornek-" + c.kim, name: u.ad, color: u.renk, text: c.metin, when: c.zaman }; });
     if (Veri.mode === "cloud") {
       return seed.concat((p._yorumlar || []).map(function (c) {
         var mine = c.uid === USER.uid;
-        return { id: c.id, mine: mine, canDel: mine || USER.rol === "admin", name: c.ad, photo: c.foto, color: mine ? "var(--accent)" : "#5b6b78", text: c.metin, when: ago(c.t) };
+        return { id: c.id, kisi: c.uid, mine: mine, canDel: mine || USER.rol === "admin", name: c.ad, photo: c.foto, color: mine ? "var(--accent)" : "#5b6b78", text: c.metin, when: ago(c.t) };
       }));
     }
     var mine = (ST.comments[p.id] || []).map(function (c) { return { id: c.id, mine: true, canDel: true, name: USER.name, photo: USER.photo, color: "var(--accent)", text: c.text, when: ago(c.t) }; });
@@ -2346,6 +2361,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     if (h === "haritalar") return renderMaps();
     if (h === "oyun") return renderGame();
     if (h === "profil") return renderProfile();
+    if (h.indexOf("kisi-") === 0) return h.slice(5) === USER.uid ? renderProfile() : renderPerson(h.slice(5));
     if (h === "yonetim") return renderAdmin();
     renderFeed("home");
   }
@@ -2383,10 +2399,11 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       '<button class="act save' + (saved ? " saved" : "") + '" data-a="save" type="button" aria-pressed="' + saved + '" aria-label="Kaydet"><img src="assets/ikon-kaydet.png" alt=""></button>' +
       '</div>';
   }
+  function kisiId(p) { return p.uid || "ornek-" + p.yazar; }
   function headHTML(p) {
     var a = person(p.yazar);
-    return '<header class="post-head">' + avatarHTML(a.ad, a.renk, a.foto) +
-      '<div class="who"><strong>' + esc(a.ad) + '</strong>' +
+    return '<header class="post-head"><button class="kisi-av" type="button" data-kisi="' + esc(kisiId(p)) + '" aria-label="' + esc(a.ad) + ' profilini aç">' + avatarHTML(a.ad, a.renk, a.foto) + '</button>' +
+      '<div class="who"><button class="kisi-ad" type="button" data-kisi="' + esc(kisiId(p)) + '">' + esc(a.ad) + '</button>' +
       '<button class="place-link" data-a="open" type="button">' + ICON.pin + '<span>' + esc(p.yer) + '</span></button></div>' +
       '<span class="when">' + esc(p.zaman) + '</span></header>';
   }
@@ -2553,7 +2570,8 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     if (Veri.mode === "cloud" && !p._yorumlar) { $("comments").innerHTML = '<li class="none">Yorumlar yükleniyor…</li>'; loadComments(p); return; }
     var list = allComments(p);
     $("comments").innerHTML = list.length ? list.map(function (c) {
-      return '<li class="comment">' + avatarHTML(c.name, c.color, c.photo) + '<div class="body"><p><b>' + esc(c.name) + '</b> ' + esc(c.text) + '</p>' +
+      var kb = c.kisi ? '<button class="kisi-ad" type="button" data-kisi="' + esc(c.kisi) + '">' + esc(c.name) + '</button>' : '<b>' + esc(c.name) + '</b>';
+      return '<li class="comment">' + (c.kisi ? '<button class="kisi-av" type="button" data-kisi="' + esc(c.kisi) + '" aria-label="' + esc(c.name) + ' profilini aç">' + avatarHTML(c.name, c.color, c.photo) + '</button>' : avatarHTML(c.name, c.color, c.photo)) + '<div class="body"><p>' + kb + ' ' + esc(c.text) + '</p>' +
         '<div class="meta"><span>' + esc(c.when) + '</span>' + (c.canDel ? '<button type="button" data-a="del-comment" data-cid="' + c.id + '">Sil</button>' : '') + '</div></div></li>';
     }).join("") : '<li class="comment" style="grid-template-columns:1fr;color:var(--muted)">Henüz yorum yok.</li>';
   }
@@ -3260,8 +3278,8 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
   function liderHTML(list) {
     if (!list.length) return '<li class="none">Henüz kimse oynamadı. İlk sen ol.</li>';
     return list.map(function (r, i) {
-      return '<li class="' + (r.uid === USER.uid ? "ben" : "") + '"><span class="sira">' + (i + 1) + '</span>' + avatarHTML(r.ad, "#5b6b78", r.foto) +
-        '<strong>' + esc(r.ad) + '</strong><b>' + r.puan.toLocaleString("tr-TR") + '</b></li>';
+      return '<li class="' + (r.uid === USER.uid ? "ben" : "") + '"><span class="sira">' + (i + 1) + '</span><button class="kisi-av" type="button" data-kisi="' + esc(r.uid) + '" aria-label="' + esc(r.ad) + ' profilini aç">' + avatarHTML(r.ad, "#5b6b78", r.foto) + '</button>' +
+        '<strong><button class="kisi-ad" type="button" data-kisi="' + esc(r.uid) + '">' + esc(r.ad) + '</button></strong><b>' + r.puan.toLocaleString("tr-TR") + '</b></li>';
     }).join("");
   }
   function liderYukle(mod) {
@@ -3434,6 +3452,34 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
         : '<div class="tab-empty"><p>Kaydedilen gönderi yok.</p></div>');
   }
 
+  /* ===================== BAŞKASININ PROFİLİ ===================== */
+  function renderPerson(id) {
+    route = "person";
+    var ornek = id.indexOf("ornek-") === 0, key = ornek ? id.slice(6) : "k:" + id, bilinen = DATA.kullanicilar[key] || {};
+    var posts = DATA.gonderiler.filter(function (p) { return ornek ? p.ornek && p.yazar === key : p.uid === id; });
+    var begeni = posts.reduce(function (s, p) { return s + likeCount(p); }, 0);
+    function ciz(pr) {
+      if (route !== "person") return;
+      var ad = pr.ad || bilinen.ad || "Gezgin", foto = pr.foto || bilinen.foto || "", ilgi = pr.ilgi || [];
+      setTop("back", ad);
+      $("view").innerHTML = '<div class="page page-pad">' +
+        '<div class="pf-head">' + avatarHTML(ad, bilinen.renk || "#5b6b78", foto) +
+        '<div class="pf-stats"><div><b>' + posts.length + '</b><span>Gönderi</span></div><div><b>' + fmt(begeni) + '</b><span>Beğeni</span></div><div><b>' + (ilgi.length) + '</b><span>İlgi alanı</span></div></div></div>' +
+        '<div class="pf-info"><strong>' + esc(ad) + (pr.rol === "admin" ? ' <span class="badge-admin">Yönetici</span>' : '') + '</strong>' +
+        (pr.t ? '<span class="handle">Katılım: ' + esc(fmtDate(pr.t)) + '</span>' : ornek ? '<span class="handle">Örnek hesap</span>' : '') + '</div>' +
+        ((pr.bio || ilgi.length) ? '<div class="pf-about"><div class="pf-col"><h3>Hakkında</h3>' + (pr.bio ? '<p class="bio">' + esc(pr.bio) + '</p>' : '<p class="bio empty-bio">Henüz yazılmadı.</p>') + '</div>' +
+          '<div class="pf-col"><h3>İlgi alanları</h3>' + (ilgi.length ? '<ul class="ilgi">' + ilgi.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : '<p class="bio empty-bio">Eklenmedi.</p>') + '</div></div>' : '') +
+        (!ornek ? '<div class="pf-actions"><button class="btn-sec" type="button" id="ps-mesaj">Mesaj gönder</button></div>' : '') +
+        '<div class="sub-head"><h2>Gönderiler</h2><span>' + posts.length + '</span></div>' +
+        (posts.length ? '<div class="grid">' + posts.map(function (p) { return tileHTML(p, p.medya[0]); }).join("") + '</div>' : '<div class="tab-empty"><p>Henüz gönderi yok.</p></div>') + '</div>';
+      if ($("ps-mesaj")) $("ps-mesaj").addEventListener("click", function () { kisiler[id] = { uid: id, ad: ad, foto: foto }; go("mesaj-" + id); });
+    }
+    setTop("back", bilinen.ad || "Profil");
+    $("view").innerHTML = '<div class="page page-pad"><p class="none">Yükleniyor…</p></div>';
+    if (ornek) return ciz({});
+    Veri.getProfile(id).then(function (pr) { ciz(pr || {}); }).catch(function () { ciz({}); });
+  }
+
   /* ===================== YÖNETİM (yalnızca yöneticiler) ===================== */
   var adTab = "gonderi", adUsers = [], adComments = [], adReports = [];
   function renderAdmin() {
@@ -3517,7 +3563,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     } else {
       b.innerHTML = (adUsers.length ? '<ul class="ad-list">' + adUsers.map(function (u) {
         var self = u.uid === USER.uid;
-        return '<li>' + avatarHTML(u.ad, "#5b6b78") + '<div class="ad-main"><strong>' + esc(u.ad) + (u.rol === "admin" ? ' <span class="badge-admin">Yönetici</span>' : '') + (u.yasakli ? ' <span class="badge-ban">Yasaklı</span>' : '') + '</strong>' +
+        return '<li>' + avatarHTML(u.ad, "#5b6b78") + '<div class="ad-main"><strong><button class="kisi-ad" type="button" data-kisi="' + esc(u.uid) + '">' + esc(u.ad) + '</button>' + (u.rol === "admin" ? ' <span class="badge-admin">Yönetici</span>' : '') + (u.yasakli ? ' <span class="badge-ban">Yasaklı</span>' : '') + '</strong>' +
           '<small>' + esc(u.eposta || "") + '</small>' +
           (u.okul ? '<small>' + esc(u.okul) + ' · ' + esc(u.sube || "-") + ' · No ' + esc(u.okulNo || "-") + '</small>' : '<small>Okul bilgisi girilmedi</small>') +
           '<small>' + (u.dogum && u.dogum !== "kurulmadi" ? 'Doğum ' + fmtDate(u.dogum) + ' · ' : '') + 'Katılım ' + fmtDate(u.t) + ' · ' + u.gonderi + ' gönderi · ' + u.yorum + ' yorum</small></div>' +
@@ -3751,11 +3797,15 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       '<div class="me-id"><strong>' + esc(USER.name) + (USER.rol === "admin" ? ' <span class="badge-admin">Yönetici</span>' : '') + '</strong><span>' + esc(USER.email) + '</span><span>Giriş: ' + esc(USER.method) + '</span></div></div>' +
       '<div class="stats"><div><b>' + myPosts().length + '</b><span>Gönderi</span></div><div><b>' + Object.keys(ST.liked).length + '</b><span>Beğeni</span></div><div><b>' + Object.keys(ST.saved).length + '</b><span>Kayıtlı</span></div></div>';
   }
+  document.addEventListener("click", function (e) {
+    var k = e.target.closest("[data-kisi]"); if (!k || !USER) return;
+    e.preventDefault(); e.stopPropagation(); closeAll(); go("kisi-" + k.dataset.kisi);
+  }, true);
   function anaSayfa() { if ($("btn-left").dataset.act === "back") return; if (location.hash.replace("#", "")) go(""); else { renderFeed("home"); window.scrollTo({ top: 0, behavior: "smooth" }); } }
   $("top-title").addEventListener("click", anaSayfa);
   $("top-title").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); anaSayfa(); } });
   $("btn-left").addEventListener("click", function () {
-    if (this.dataset.act === "back") { go(route === "chat" ? "mesajlar" : route === "game" ? "kesfet" : ""); return; }
+    if (this.dataset.act === "back") { if (route === "person" && history.length > 1) { history.back(); return; } go(route === "chat" ? "mesajlar" : route === "game" ? "kesfet" : ""); return; }
     renderMenu(); $("drawer").hidden = false; this.setAttribute("aria-expanded", "true");
   });
   $("drawer").addEventListener("click", function (e) {
