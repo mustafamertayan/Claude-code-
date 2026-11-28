@@ -768,6 +768,8 @@ a { color: var(--accent); }
 .wordmark { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(2.7rem, 13vw, 3.8rem); line-height: 1; letter-spacing: -.01em; text-shadow: 0 2px 20px rgba(0,0,0,.5); }
 .tagline { margin: 12px 0 0; font-size: 1.02rem; opacity: .92; text-shadow: 0 1px 10px rgba(0,0,0,.6); }
 .login-actions { display: grid; gap: 12px; width: min(100%, 300px); }
+.login-kvkk { justify-self: center; margin-top: 2px; color: rgba(255,255,255,.85); font-size: .82rem; text-decoration: underline; text-underline-offset: 3px; text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+.login-kvkk:hover { color: #fff; }
 @media (orientation: portrait) {
   .login-center .login-mark { width: 76px; height: 76px; border-radius: 22px; margin-bottom: 12px; }
   .login-center .wordmark { font-size: clamp(2.3rem, 11vw, 3.2rem); }
@@ -1461,6 +1463,7 @@ img.ev-ic { width: 18px; height: 18px; vertical-align: -4px; margin-right: 4px; 
     <div class="login-actions">
       <button class="btn btn-light" id="btn-signup" type="button">Kayıt Ol</button>
       <button class="btn btn-outline" id="btn-signin" type="button">Giriş Yap</button>
+      <a class="login-kvkk" href="gizlilik.html" target="_blank" rel="noopener">KVKK Aydınlatma Metni ve Gizlilik</a>
     </div>
   </div>
   <div class="version">1.1.2</div>
