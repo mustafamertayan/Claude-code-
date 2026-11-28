@@ -884,6 +884,7 @@ body.in-app::before { content: ""; position: fixed; inset: 0 0 auto; height: env
 .settings-btn { display: flex; align-items: center; gap: 6px; border: 0; background: transparent; padding: 8px 10px; border-radius: 10px; font-weight: 600; font-size: .88rem; }
 .settings-btn:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); }
 .settings-btn svg { width: 21px; height: 21px; }
+@media (max-width: 430px) { .settings-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .settings-btn { padding: 8px; } }
 
 .view-head { margin: 0; padding: 16px 16px 0; font-family: var(--font-display); font-weight: 400; font-size: 1.4rem; }
 .empty { margin: 24px 16px; padding: 28px 20px; border: 1.5px dashed var(--line); border-radius: var(--r); text-align: center; color: var(--muted); }
@@ -1387,6 +1388,8 @@ img.ev-ic { width: 18px; height: 18px; vertical-align: -4px; margin-right: 4px; 
 .ad-stats b { font-size: 1.4rem; font-variant-numeric: tabular-nums; }
 .ad-stats span { color: var(--muted); font-size: .8rem; }
 .tabs.three { grid-template-columns: repeat(3, 1fr); }
+.tabs.three.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tabs.four button { padding-inline: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ad-list { list-style: none; margin: 0; padding: 0; display: grid; }
 .ad-list li { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .ad-list li > .ad-main:first-child { grid-column: 1 / 2; }
@@ -1797,7 +1800,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       else if (/exceeded the maximum allowed size|payload too large|entity too large/i.test(m)) c = "tg/buyuk";
       else if (/failed to fetch|network/i.test(m)) c = "auth/network-request-failed";
       else if (/row-level security|permission denied|violates row/i.test(m)) c = current && current.yasakli ? "tg/yasak" : "tg/yetki";
-      if (c) return fail(c);
+      if (c) { var f = fail(c); f.ham = m; return f; }
       var x = new Error(m || "Sunucuya ulaşılamadı. Tekrar dene."); return x;
     }
     function chk(r) { if (r.error) throw sbErr(r.error); return r.data; }
@@ -3912,14 +3915,19 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     $("ad-body").addEventListener("click", adminClick);
     loadAdmin(); depoYukle(true);
   }
+  var adHata = {};
   function loadAdmin() {
-    return Promise.all([Veri.adminUsers(), Veri.adminComments(), Veri.adminReports().catch(function () { return []; })]).then(function (r) {
+    // Her liste ayrı yüklenir: biri hata verse bile diğerleri ve sayılar görünür.
+    adHata = {};
+    function al(ad, f) { return f().catch(function (err) { adHata[ad] = errText(err) + (err && err.ham ? " (" + err.ham + ")" : ""); return []; }); }
+    return Promise.all([al("uye", Veri.adminUsers), al("yorum", Veri.adminComments), al("sikayet", Veri.adminReports)]).then(function (r) {
       adUsers = r[0]; adComments = r[1]; adReports = r[2];
       if (route !== "admin") return;
       var posts = DATA.gonderiler.filter(function (p) { return !p.ornek; }).length;
-      $("ad-stats").innerHTML = '<div><b>' + adUsers.length + '</b><span>Üye</span></div><div><b>' + posts + '</b><span>Gönderi</span></div><div><b>' + adComments.length + '</b><span>Yorum</span></div><div><b>' + adReports.length + '</b><span>Şikayet</span></div>';
+      function sayi(ad, n) { return adHata[ad] ? "!" : n; }
+      $("ad-stats").innerHTML = '<div><b>' + sayi("uye", adUsers.length) + '</b><span>Üye</span></div><div><b>' + posts + '</b><span>Gönderi</span></div><div><b>' + sayi("yorum", adComments.length) + '</b><span>Yorum</span></div><div><b>' + sayi("sikayet", adReports.length) + '</b><span>Şikayet</span></div>';
       drawAdmin();
-    }).catch(function (err) { if ($("ad-body")) $("ad-body").innerHTML = '<p class="empty">Yönetim verileri alınamadı: ' + esc(errText(err)) + '</p>'; });
+    });
   }
   var DEPO_SINIR = 1024 * 1048576;
   function mb(b) { return (b / 1048576).toLocaleString("tr-TR", { maximumFractionDigits: b < 10 * 1048576 ? 1 : 0 }) + " MB"; }
@@ -3950,6 +3958,8 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
   function fmtDate(t) { return new Date(t).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" }); }
   function drawAdmin() {
     var b = $("ad-body"); if (!b) return;
+    var hataAd = { uye: "uye", yorum: "yorum", sikayet: "sikayet" }[adTab];
+    if (hataAd && adHata[hataAd]) { b.innerHTML = '<p class="empty">Bu liste yüklenemedi: ' + esc(adHata[hataAd]) + '<br><button class="btn-sec" type="button" id="ad-tekrar" style="margin-top:10px">Tekrar dene</button></p>'; $("ad-tekrar").addEventListener("click", function () { b.innerHTML = '<p class="none">Yükleniyor…</p>'; loadAdmin(); }); return; }
     if (adTab === "gonderi") {
       var list = DATA.gonderiler.filter(function (p) { return !p.ornek; });
       b.innerHTML = (list.length ? '<ul class="ad-list">' + list.map(function (p) {
