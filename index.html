@@ -1173,6 +1173,35 @@ img.ev-ic { width: 18px; height: 18px; vertical-align: -4px; margin-right: 4px; 
 /* Oyun: Haritada Bul */
 .gm-banner { display: flex; align-items: center; gap: 12px; width: 100%; margin: 12px 0 2px; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--fg); text-align: left; }
 .gm-banner:hover { border-color: var(--accent); }
+.yr-ic { display: grid; place-items: center; background: linear-gradient(135deg, #8a5a2b, #c9971a) !important; color: #fff; font-family: var(--font-display); font-size: 1.6rem; }
+.yr-ic::after { display: none; }
+.yr-katlar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.yr { padding-top: 14px; padding-bottom: 32px; }
+.yr-ust { display: flex; justify-content: space-between; font-weight: 700; font-size: .9rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.yr-puan { color: var(--accent); }
+.yr-sure { height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; margin: 10px 0 18px; }
+.yr-sure i { display: block; height: 100%; width: 100%; background: var(--accent); border-radius: inherit; transition: width .1s linear; }
+.yr-sure i.az { background: var(--like); }
+.yr-kat { margin: 0 0 4px; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+.yr-soru { margin: 0 0 18px; font-size: 1.2rem; line-height: 1.4; font-weight: 700; }
+.yr-secenekler { display: grid; gap: 10px; }
+.yr-sec { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--fg); text-align: left; font: inherit; font-size: .98rem; cursor: pointer; }
+.yr-sec:hover:not(:disabled) { border-color: var(--accent); }
+.yr-harf { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--bg); font-weight: 700; font-size: .85rem; }
+.yr-sec.dogru { border-color: #2e8b57; background: color-mix(in srgb, #2e8b57 14%, var(--surface)); }
+.yr-sec.dogru .yr-harf { background: #2e8b57; color: #fff; }
+.yr-sec.yanlis { border-color: var(--like); background: color-mix(in srgb, var(--like) 12%, var(--surface)); }
+.yr-sec.yanlis .yr-harf { background: var(--like); color: #fff; }
+.yr-sec:disabled { cursor: default; }
+.yr-aciklama { margin: 16px 0 12px; padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.yr-aciklama.iyi strong { color: #2e8b57; }
+.yr-aciklama.kotu strong { color: var(--like); }
+.yr-aciklama p { margin: 8px 0 0; font-size: .92rem; line-height: 1.5; }
+.yr-ozet { margin: 4px 0 0; color: var(--muted); }
+.yr-yanlis { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
+.yr-yanlis li { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.yr-yanlis p { margin: 0 0 4px; font-weight: 600; font-size: .92rem; }
+.yr-yanlis small { color: var(--muted); }
 .gm-banner-ic { flex: none; width: 44px; height: 44px; border-radius: 11px; background: url(assets/fiziki-harita.jpg) 52% 38% / 520px auto; position: relative; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
 .gm-banner-ic::after { content: ""; position: absolute; left: 15px; top: 9px; width: 14px; height: 14px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--like); border: 2px solid #fff; }
 .gm-banner > span:nth-child(2) { flex: 1; display: grid; gap: 2px; }
@@ -1755,6 +1784,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
   ERR["tg/sikayet-var"] = "Bu gönderiyi zaten şikayet ettin.";
   ERR["tg/ayni-sifre"] = "Yeni şifren eski şifrenden farklı olmalı.";
   ERR["tg/kurtarma-yok"] = "Şifre sıfırlama oturumu bulunamadı. Şifremi unuttum'dan yeni bağlantı iste ve e-postadaki bağlantıyı bu tarayıcıda aç.";
+  ERR["tg/tarih-yok"] = "Yarışma sıralaması için yönetici veritabanı güncellemesini (güncelleme-11) çalıştırmalı.";
   ERR["tg/sosyal-yok"] = "Bu özellik için yönetici veritabanı güncellemesini (güncelleme-10) çalıştırmalı.";
   ERR["tg/engel-mesaj"] = "Bu kişiyle mesajlaşamazsın.";
   ERR["tg/yasak-yok"] = "IP yasağı için yönetici veritabanı güncellemesini (güncelleme-9) çalıştırmalı.";
@@ -1796,6 +1826,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       else if (/oyun_/i.test(m) && /schema cache|does not exist|could not find/i.test(m)) c = "tg/oyun-yok";
       else if (/yonetici_(yasakla|yasak_kaldir|ip_listesi|yasakli_ipler|ip_kaldir)/i.test(m) && /schema cache|does not exist|could not find/i.test(m)) c = "tg/yasak-yok";
       else if (/takipler|engellemeler|bildirimler|yorum_begenileri|hesabimi_sil|gizli|ust_id|icerik|sikayetler\.tur|column "tur"/i.test(m) && /schema cache|does not exist|could not find/i.test(m)) c = "tg/sosyal-yok";
+      else if (/oyun_skorlari_mod_check|oyun_mod_gecerli|oyun_skorlari_puan_check/i.test(m)) c = "tg/tarih-yok";
       else if (/depolama_durumu/i.test(m) && /schema cache|does not exist|could not find/i.test(m)) c = "tg/depo-yok";
       else if (/exceeded the maximum allowed size|payload too large|entity too large/i.test(m)) c = "tg/buyuk";
       else if (/failed to fetch|network/i.test(m)) c = "auth/network-request-failed";
@@ -2544,6 +2575,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     if (h === "gecmis") return renderHistory();
     if (h === "haritalar") return renderMaps();
     if (h === "oyun") return renderGame();
+    if (h === "yarisma") return renderQuiz();
     if (h === "profil") return renderProfile();
     if (h.indexOf("liste-takipci-") === 0) return renderFollowList("takipci", h.slice(14));
     if (h.indexOf("liste-takip-") === 0) return renderFollowList("takip", h.slice(12));
@@ -3332,9 +3364,11 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     $("view").innerHTML = '<div class="page page-pad">' +
       '<label class="search" for="ex-q">' + ICON.search + '<span class="sr">Ara</span><input id="ex-q" type="search" autocomplete="off" placeholder="Ara" value="' + esc(exQ) + '"></label>' +
       '<button class="gm-banner" type="button" id="ex-oyun"><span class="gm-banner-ic" aria-hidden="true"></span><span><strong>Haritada Bul</strong><small>Mekânların yerini tahmin et, sıralamada yüksel</small></span><span class="gm-ok" aria-hidden="true">›</span></button>' +
+      '<button class="gm-banner" type="button" id="ex-yarisma"><span class="gm-banner-ic yr-ic" aria-hidden="true">?</span><span><strong>Tarih Yarışması</strong><small>Dünya savaşları, Çanakkale, Balkanlar, Haçlılar ve daha fazlası</small></span><span class="gm-ok" aria-hidden="true">›</span></button>' +
       chipsHTML("ex-chips", cats.map(function (c) { return [c, c]; }), exCat) + '<div id="ex-res"></div></div>';
     $("ex-q").addEventListener("input", function () { exQ = this.value; exLimit = 30; drawExplore(); });
     $("ex-oyun").addEventListener("click", function () { go("oyun"); });
+    $("ex-yarisma").addEventListener("click", function () { go("yarisma"); });
     $("ex-res").addEventListener("click", function (e) { if (e.target.closest("#ex-more")) { exLimit += 40; drawExplore(); } });
     $("ex-chips").addEventListener("click", function (e) {
       var b = e.target.closest("[data-c]"); if (!b) return; exCat = b.dataset.c;
@@ -3493,6 +3527,103 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     c.hidden = false;
   }
 
+
+  /* ===================== TARİH YARIŞMASI ===================== */
+  var SORULAR = null, yrKat = "Karışık", YR = null, yrSaat = null;
+  var YR_SORU = 10, YR_SURE = 20;
+  var YR_KATLAR = ["Karışık", "1. Dünya Savaşı", "2. Dünya Savaşı", "Trablusgarp ve Balkan Savaşları", "Çanakkale Cephesi", "Haçlılar, Sırpsındığı ve Kosova", "Türk Tarihinin Savaşları"];
+  function soruYukle() { return SORULAR ? Promise.resolve(SORULAR) : getJSON("data/sorular.json").then(function (d) { SORULAR = d; return d; }); }
+  function yrRekor(k) { return store.get("tg_yarisma_rekor_" + USER.uid + "_" + k, 0); }
+  function yrUnvan(dogru) { return dogru >= 10 ? "Tarih Profesörü" : dogru >= 8 ? "Tarih Kurdu" : dogru >= 6 ? "Meraklı Tarihçi" : dogru >= 4 ? "Yolun Başında" : "Tarih Çırağı"; }
+  function renderQuiz() {
+    route = "quiz"; setTop("back", "Tarih Yarışması"); YR = null; clearInterval(yrSaat);
+    var r = yrRekor(yrKat);
+    $("view").innerHTML = '<div class="page page-pad game-start">' +
+      '<div class="gm-hero"><h2>Tarih Yarışması</h2><p>' + YR_SORU + ' soru, her biri için ' + YR_SURE + ' saniye. Doğru cevap 100 puan; ne kadar hızlı cevaplarsan o kadar ek puan.</p></div>' +
+      '<p class="set-label" style="margin-top:4px">Konu</p>' +
+      '<div class="yr-katlar" id="yr-katlar">' + YR_KATLAR.map(function (k) { return '<button type="button" class="chip" data-k="' + esc(k) + '" aria-pressed="' + (k === yrKat) + '">' + esc(k) + '</button>'; }).join("") + '</div>' +
+      '<div class="gm-rekor">Bu konudaki en iyi puanın: <b id="yr-rekor">' + (r ? r.toLocaleString("tr-TR") : "—") + '</b></div>' +
+      '<button class="btn btn-primary" type="button" id="yr-basla">Başla</button>' +
+      '<div class="sub-head"><h2>Sıralama</h2><span>Tüm konular</span></div><ol class="lider" id="gm-lider"></ol></div>';
+    $("yr-katlar").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-k]"); if (!b) return; yrKat = b.dataset.k;
+      this.querySelectorAll("[data-k]").forEach(function (c) { c.setAttribute("aria-pressed", String(c === b)); });
+      var r2 = yrRekor(yrKat); $("yr-rekor").textContent = r2 ? r2.toLocaleString("tr-TR") : "—";
+    });
+    $("yr-basla").addEventListener("click", function () {
+      var b = this; b.disabled = true;
+      soruYukle().then(yrBasla).catch(function () { b.disabled = false; toast("Sorular yüklenemedi. İnternet bağlantını kontrol et."); });
+    });
+    liderYukle("tarih");
+  }
+  function yrBasla(tum) {
+    var havuz = tum.filter(function (q) { return yrKat === "Karışık" || q.k === yrKat; });
+    var secim;
+    if (yrKat === "Karışık") {
+      // Karışıkta her konudan dengeli soru gelir.
+      var gruplar = {}; karistir(havuz).forEach(function (q) { (gruplar[q.k] = gruplar[q.k] || []).push(q); });
+      secim = []; var anahtar = karistir(Object.keys(gruplar)), i = 0;
+      while (secim.length < YR_SORU && anahtar.some(function (k) { return gruplar[k].length; })) { var k = anahtar[i++ % anahtar.length]; if (gruplar[k].length) secim.push(gruplar[k].pop()); }
+    } else secim = karistir(havuz).slice(0, YR_SORU);
+    YR = { sorular: secim.map(function (q) { return { k: q.k, s: q.s, a: q.a, dogru: q.c[0], secenek: karistir(q.c) }; }), i: 0, puan: 0, dogru: 0, cevaplar: [] };
+    yrSoru();
+  }
+  function yrSoru() {
+    var q = YR.sorular[YR.i], kalan = YR_SURE, bas = Date.now();
+    YR.cevaplandi = false;
+    $("view").innerHTML = '<div class="page page-pad yr">' +
+      '<div class="yr-ust"><span>Soru ' + (YR.i + 1) + '/' + YR.sorular.length + '</span><span class="yr-puan">' + YR.puan.toLocaleString("tr-TR") + ' puan</span></div>' +
+      '<div class="yr-sure"><i id="yr-bar"></i></div>' +
+      '<p class="yr-kat">' + esc(q.k) + '</p><h2 class="yr-soru">' + esc(q.s) + '</h2>' +
+      '<div class="yr-secenekler" id="yr-sec">' + q.secenek.map(function (c, i) { return '<button type="button" class="yr-sec" data-i="' + i + '"><span class="yr-harf">' + "ABCD"[i] + '</span><span>' + esc(c) + '</span></button>'; }).join("") + '</div>' +
+      '<div id="yr-sonuc"></div></div>';
+    window.scrollTo(0, 0);
+    clearInterval(yrSaat);
+    yrSaat = setInterval(function () {
+      if (route !== "quiz" || !YR) return clearInterval(yrSaat);
+      kalan = YR_SURE - (Date.now() - bas) / 1000;
+      var bar = $("yr-bar"); if (bar) { bar.style.width = Math.max(0, kalan / YR_SURE * 100) + "%"; bar.classList.toggle("az", kalan < 6); }
+      if (kalan <= 0) yrCevap(-1, 0);
+    }, 100);
+    $("yr-sec").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-i]"); if (!b) return;
+      yrCevap(+b.dataset.i, Math.max(0, YR_SURE - (Date.now() - bas) / 1000));
+    });
+  }
+  function yrCevap(secilen, kalan) {
+    if (!YR || YR.cevaplandi) return; YR.cevaplandi = true; clearInterval(yrSaat);
+    var q = YR.sorular[YR.i], dogruI = q.secenek.indexOf(q.dogru), dogru = secilen === dogruI;
+    var kazanc = dogru ? 100 + Math.round(kalan / YR_SURE * 50) : 0;
+    YR.puan += kazanc; if (dogru) YR.dogru++;
+    YR.cevaplar.push({ s: q.s, dogru: dogru, cevap: q.dogru, secilen: secilen >= 0 ? q.secenek[secilen] : null });
+    $("yr-sec").querySelectorAll("[data-i]").forEach(function (b) {
+      var i = +b.dataset.i; b.disabled = true;
+      if (i === dogruI) b.classList.add("dogru"); else if (i === secilen) b.classList.add("yanlis");
+    });
+    document.querySelector(".yr-puan").textContent = YR.puan.toLocaleString("tr-TR") + " puan";
+    $("yr-sonuc").innerHTML = '<div class="yr-aciklama ' + (dogru ? "iyi" : "kotu") + '"><strong>' + (dogru ? "Doğru! +" + kazanc : secilen < 0 ? "Süre doldu." : "Yanlış.") + '</strong>' +
+      (dogru ? '' : '<span> Doğru cevap: <b>' + esc(q.dogru) + '</b></span>') + '<p>' + esc(q.a) + '</p></div>' +
+      '<button class="btn btn-primary" type="button" id="yr-devam">' + (YR.i + 1 < YR.sorular.length ? "Sonraki soru" : "Sonucu gör") + '</button>';
+    $("yr-devam").addEventListener("click", function () { YR.i++; if (YR.i < YR.sorular.length) yrSoru(); else yrBitir(); });
+    $("yr-sonuc").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  function yrBitir() {
+    var g = YR; YR = null;
+    var eski = yrRekor(yrKat), yeni = g.puan > eski;
+    if (yeni) store.set("tg_yarisma_rekor_" + USER.uid + "_" + yrKat, g.puan);
+    var yanlislar = g.cevaplar.filter(function (c) { return !c.dogru; });
+    $("view").innerHTML = '<div class="page page-pad game-start">' +
+      '<div class="gm-hero gm-son"><small>' + esc(yrKat) + '</small><h2>' + g.puan.toLocaleString("tr-TR") + ' <span>/ ' + (g.sorular.length * 150).toLocaleString("tr-TR") + '</span></h2>' +
+      '<p class="unvan">' + yrUnvan(g.dogru) + '</p><p class="yr-ozet">' + g.dogru + ' doğru · ' + (g.sorular.length - g.dogru) + ' yanlış</p>' + (yeni && eski ? '<p class="gm-yeni">Yeni rekor!</p>' : '') + '</div>' +
+      (yanlislar.length ? '<div class="sub-head"><h2>Yanlış cevapların</h2><span>' + yanlislar.length + '</span></div><ul class="yr-yanlis">' + yanlislar.map(function (c) {
+        return '<li><p>' + esc(c.s) + '</p><small>' + (c.secilen ? 'Senin cevabın: ' + esc(c.secilen) + ' · ' : 'Süre doldu · ') + 'Doğrusu: <b>' + esc(c.cevap) + '</b></small></li>';
+      }).join("") + '</ul>' : '<p class="tab-empty">Hepsini doğru bildin!</p>') +
+      '<button class="btn btn-primary" type="button" id="yr-tekrar">Tekrar oyna</button>' +
+      '<div class="sub-head"><h2>Sıralama</h2><span>Tüm konular</span></div><ol class="lider" id="gm-lider"><li class="none">Kaydediliyor…</li></ol></div>';
+    window.scrollTo(0, 0);
+    $("yr-tekrar").addEventListener("click", function () { soruYukle().then(yrBasla); });
+    Veri.saveScore("tarih", g.puan).catch(function (err) { toast(errText(err)); }).then(function () { liderYukle("tarih"); });
+  }
   /* ===================== OYUN: HARİTADA BUL ===================== */
   var gmMod = "turkiye", GM = null, gmMap = null, gmLayer = null;
   var GM_TUR = 5;
@@ -4292,7 +4423,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
   $("top-title").addEventListener("click", anaSayfa);
   $("top-title").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); anaSayfa(); } });
   $("btn-left").addEventListener("click", function () {
-    if (this.dataset.act === "back") { if ((route === "person" || route === "liste" || route === "notifs" || route === "engeller") && history.length > 1) { history.back(); return; } go(route === "chat" ? "mesajlar" : route === "game" ? "kesfet" : ""); return; }
+    if (this.dataset.act === "back") { if ((route === "person" || route === "liste" || route === "notifs" || route === "engeller") && history.length > 1) { history.back(); return; } go(route === "chat" ? "mesajlar" : route === "game" || route === "quiz" ? "kesfet" : ""); return; }
     renderMenu(); $("drawer").hidden = false; this.setAttribute("aria-expanded", "true");
   });
   $("drawer").addEventListener("click", function (e) {

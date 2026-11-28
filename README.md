@@ -97,6 +97,9 @@ Oyundaki mekân fotoğrafları Wikimedia Commons'tandır (`assets/oyun/`, yazar 
 - **Hesabımı sil** (Ayarlar; her şey kalıcı olarak silinir) ve `gizlilik.html` (Gizlilik ve kurallar).
 - **Anlık mesaj ve bildirim** (Supabase Realtime), akışta **sonsuz kaydırma**, profilde **gezgin pasaportu ve rozetler**, **ana ekrana ekle** (`manifest.webmanifest`, `sw.js`).
 
+### 14. Tarih Yarışması
+`supabase/guncelleme-11.sql` dosyasını SQL Editor'de çalıştır (sıralama tablosu için). Keşfet'te Haritada Bul'un altındadır: 10 soru, soru başına 20 saniye, doğru cevap 100 puan + hız bonusu (en fazla 1.500). Konular: 1. ve 2. Dünya Savaşı, Trablusgarp ve Balkan Savaşları, Çanakkale, Haçlılar/Sırpsındığı/Kosova, Türk tarihinin savaşları; "Karışık" her konudan dengeli soru getirir. Sorular `tools/sorular_uret.py` içindedir; değiştirince `python3 tools/sorular_uret.py` çalıştırılır (`data/sorular.json`).
+
 ### Ücretsiz sınırlar
 Supabase ücretsiz planında 500 MB veritabanı ve 1 GB dosya deposu vardır; video başına en fazla 50 MB yüklenebilir. Kullanılmayan ücretsiz projeler bir hafta hareketsiz kalınca duraklatılır, panelden tek tıkla yeniden açılır.
 
