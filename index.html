@@ -1750,6 +1750,8 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
   ERR["tg/yas"] = "Kültürİz'i kullanmak için en az 13 yaşında olmalısın.";
   ERR["tg/kod"] = "Kod hatalı ya da süresi dolmuş. Kodu kontrol et ya da yeni kod iste.";
   ERR["tg/sikayet-var"] = "Bu gönderiyi zaten şikayet ettin.";
+  ERR["tg/ayni-sifre"] = "Yeni şifren eski şifrenden farklı olmalı.";
+  ERR["tg/kurtarma-yok"] = "Şifre sıfırlama oturumu bulunamadı. Şifremi unuttum'dan yeni bağlantı iste ve e-postadaki bağlantıyı bu tarayıcıda aç.";
   ERR["tg/sosyal-yok"] = "Bu özellik için yönetici veritabanı güncellemesini (güncelleme-10) çalıştırmalı.";
   ERR["tg/engel-mesaj"] = "Bu kişiyle mesajlaşamazsın.";
   ERR["tg/yasak-yok"] = "IP yasağı için yönetici veritabanı güncellemesini (güncelleme-9) çalıştırmalı.";
@@ -1781,6 +1783,8 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       else if (/invalid login credentials/i.test(m)) c = "auth/invalid-credential";
       else if (/email not confirmed/i.test(m)) c = "tg/confirm";
       else if (/password should be at least/i.test(m)) c = "auth/weak-password";
+      else if (/should be different from the old/i.test(m)) c = "tg/ayni-sifre";
+      else if (/auth session missing|session_not_found|session not found/i.test(m)) c = "tg/kurtarma-yok";
       else if (/unable to validate email|invalid email/i.test(m)) c = "auth/invalid-email";
       else if (/rate limit|security purposes|too many/i.test(m)) c = "auth/too-many-requests";
       else if (/database error saving new user|13 yaş/i.test(m)) c = "tg/yas";
@@ -2468,7 +2472,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     if (authMode === "newpass") {
       var npw = $("f-pass").value;
       if (!sifreGuclu(npw)) return bad("f-pass", "Şifre en az 8 karakter olmalı ve harf ile rakam içermeli.");
-      job = Veri.setPassword(npw).then(function () { $("auth").hidden = true; toast("Şifren güncellendi."); });
+      job = Veri.setPassword(npw).then(function () { kurtarma = false; $("auth").hidden = true; history.replaceState(null, "", location.pathname); toast("Şifren güncellendi. Artık yeni şifrenle giriş yapabilirsin."); });
     } else if (authMode === "code") {
       var kod = $("f-code").value.trim();
       if (kod.length < 6) return bad("f-code", "E-postadaki kodu yaz ya da e-postadaki bağlantıya tıkla.");
@@ -4349,7 +4353,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
   $("btn-logout").addEventListener("click", function () { closeAll(); Veri.signOut(); });
 
   /* ===================== GENEL ===================== */
-  function closeAll() { ["drawer", "settings", "send", "report", "egg"].concat(authMode === "birth" ? [] : ["auth"]).forEach(function (id) { $(id).hidden = true; }); $("btn-left").getAttribute("aria-expanded") && $("btn-left").setAttribute("aria-expanded", "false"); }
+  function closeAll() { ["drawer", "settings", "send", "report", "egg"].concat(authMode === "birth" || (authMode === "newpass" && kurtarma) ? [] : ["auth"]).forEach(function (id) { $(id).hidden = true; }); $("btn-left").getAttribute("aria-expanded") && $("btn-left").setAttribute("aria-expanded", "false"); }
   document.addEventListener("click", function (e) {
     var am = $("sh-add-menu"); if (am && !am.hidden && !e.target.closest(".add-wrap")) { am.hidden = true; $("sh-add") && $("sh-add").setAttribute("aria-expanded", "false"); }
     var c = e.target.closest("[data-close]"); if (c) { $(c.dataset.close).hidden = true; return; }
@@ -4364,14 +4368,20 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
   applyTheme(store.get("tg_tema", "system"));
   var dataReady = Promise.all([getJSON("data/gonderiler.json"), getJSON("data/mekanlar.json").catch(function () { return []; }), getJSON("data/sehirler.json").catch(function () { return []; })])
     .then(function (r) { MEKANLAR = r[1]; SEHIRLER = r[2]; return r[0]; });
-  Veri.onRecovery(function () { openAuth("newpass"); });
+  // Şifre sıfırlama bağlantısıyla gelindi mi? (Yeni şifre penceresi, ana sayfa yüklenirken kapanmasın.)
+  var kurtarma = /type=recovery/.test(location.hash + location.search);
+  Veri.onRecovery(function () { kurtarma = true; openAuth("newpass"); });
   Veri.access().then(function (d) { if (d.engelli && d.neden === "ip") showBan("ip"); });
-  // Google'dan hata ile dönülürse (ör. izin verilmeyen adres) açıklama göster ve adresi temizle.
+  // E-postadaki bağlantı hatayla dönerse (süresi dolmuş, kullanılmış) açıklama göster ve adresi temizle.
   (function () {
-    var q = new URLSearchParams(location.search + "&" + location.hash.replace(/^#/, "")), e = q.get("error_description") || q.get("error");
+    var q = new URLSearchParams(location.search + "&" + location.hash.replace(/^#/, "")), e = q.get("error_description") || q.get("error"), kod = q.get("error_code") || "";
     if (!e) return;
+    kurtarma = false;
     history.replaceState(null, "", location.pathname);
-    setTimeout(function () { toast("Google ile giriş tamamlanamadı: " + e.replace(/\+/g, " ")); }, 600);
+    var metin = /otp_expired|expired|invalid/i.test(kod + " " + e)
+      ? "Bu bağlantının süresi dolmuş ya da daha önce kullanılmış. Aşağıdaki Şifremi unuttum'a basıp yeni bağlantı iste ve gelen EN YENİ e-postadaki bağlantıya bas."
+      : "Bağlantı açılamadı (" + e.replace(/\+/g, " ") + "). Şifremi unuttum'dan yeni bağlantı iste.";
+    setTimeout(function () { if (!USER) { openAuth("signin"); msg(metin, ""); } else toast(metin); }, 700);
   })();
   Veri.onChange(function (u) {
     if (canliKapat) { canliKapat(); canliKapat = null; }
@@ -4387,7 +4397,8 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     }).then(function () {
       showApp();
       if (welcome) { toast(welcome); welcome = ""; }
-      var ek = eksikBilgiler(); if (ek.dogum || ek.okul) openAuth("birth");
+      var ek = eksikBilgiler();
+      if (kurtarma) openAuth("newpass"); else if (ek.dogum || ek.okul) openAuth("birth");
       canliBaslat();
       clearInterval(badgeTimer); badgeTimer = setInterval(function () {
         if (!USER || document.hidden) return;
