@@ -1651,6 +1651,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     "auth/network-request-failed": "İnternet bağlantısı kurulamadı. Bağlantını kontrol edip tekrar dene.",
     
     
+    "tg/google-kapali": "Google ile giriş henüz açılmadı. Şimdilik e-posta ile kayıt olup giriş yapabilirsin.",
     "tg/no-config": "Google ile giriş, site Supabase'e bağlanınca çalışır. Şimdilik e-posta ile kayıt olabilirsin.",
     "tg/no-crypto": "Tarayıcın bu önizleme için gereken şifreleme özelliğini desteklemiyor."
   };
@@ -1789,7 +1790,16 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
           .then(function (r) { chk(r); if (r.data.user && r.data.user.identities && !r.data.user.identities.length) throw fail("auth/email-already-in-use"); return { confirm: !r.data.session }; });
       },
       signIn: function (email, pw) { return ready.then(function () { return sb.auth.signInWithPassword({ email: email, password: pw }); }).then(chk); },
-      google: function () { return ready.then(function () { return sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: here(), queryParams: { prompt: "select_account" } } }); }).then(chk); },
+      google: function () {
+        // Önce sunucuda Google girişinin açık olup olmadığına bakılır; kapalıysa Google'a gidip hata sayfasında kalmak yerine açıklama gösterilir.
+        return ready.then(function () {
+          return fetch(SUPABASE_URL + "/auth/v1/settings", { headers: { apikey: SUPABASE_ANON_KEY } })
+            .then(function (r) { return r.ok ? r.json() : null; }, function () { return null; });
+        }).then(function (ayar) {
+          if (ayar && ayar.external && ayar.external.google === false) throw fail("tg/google-kapali");
+          return sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: here(), queryParams: { prompt: "select_account" } } });
+        }).then(chk);
+      },
       reset: function (email) { return ready.then(function () { return sb.auth.resetPasswordForEmail(email, { redirectTo: here() }); }).then(chk); },
       setPassword: function (pw) { return ready.then(function () { return sb.auth.updateUser({ password: pw }); }).then(chk); },
       signOut: function () { return ready.then(function () { return sb.auth.signOut(); }); },
@@ -3861,6 +3871,13 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     .then(function (r) { MEKANLAR = r[1]; SEHIRLER = r[2]; return r[0]; });
   Veri.onRecovery(function () { openAuth("newpass"); });
   Veri.access().then(function (d) { if (d.engelli && d.neden === "ip") showBan("ip"); });
+  // Google'dan hata ile dönülürse (ör. izin verilmeyen adres) açıklama göster ve adresi temizle.
+  (function () {
+    var q = new URLSearchParams(location.search + "&" + location.hash.replace(/^#/, "")), e = q.get("error_description") || q.get("error");
+    if (!e) return;
+    history.replaceState(null, "", location.pathname);
+    setTimeout(function () { toast("Google ile giriş tamamlanamadı: " + e.replace(/\+/g, " ")); }, 600);
+  })();
   Veri.onChange(function (u) {
     if (u && (u.engel || (u.yasakli && u.rol !== "admin"))) { Veri.signedIn = true; return showBan(u.engel || "hesap"); }
     Veri.signedIn = !!u;
