@@ -2104,7 +2104,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       },
       comments: function (postId) {
         function al(cols) { return sb.from("yorumlar").select(cols).eq("gonderi_id", postId).order("olusturma"); }
-        return al("id,kullanici_id,metin,olusturma,ust_id,profiller(ad,foto_url)").then(function (r) { return r.error ? al("id,kullanici_id,metin,olusturma,profiller(ad,foto_url)") : r; }).then(chk).then(function (rows) {
+        return al("id,kullanici_id,metin,olusturma,ust_id,profiller!yorumlar_kullanici_id_fkey(ad,foto_url)").then(function (r) { return r.error ? al("id,kullanici_id,metin,olusturma,profiller!yorumlar_kullanici_id_fkey(ad,foto_url)") : r; }).then(chk).then(function (rows) {
           var list = rows.map(function (r) { var pr = r.profiller || {}; return { id: r.id, uid: r.kullanici_id, ad: pr.ad || "Gezgin", foto: pr.foto_url || "", metin: r.metin, t: Date.parse(r.olusturma), ust: r.ust_id || null, begeni: 0, begendim: false }; });
           if (!list.length) return list;
           return sb.from("yorum_begenileri").select("yorum_id,kullanici_id").in("yorum_id", list.map(function (c) { return c.id; })).then(function (r) {
@@ -2130,7 +2130,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
         });
       },
       adminComments: function () {
-        return sb.from("yorumlar").select("id,gonderi_id,kullanici_id,metin,olusturma,profiller(ad)").order("olusturma", { ascending: false }).limit(300).then(chk).then(function (rows) {
+        return sb.from("yorumlar").select("id,gonderi_id,kullanici_id,metin,olusturma,profiller!yorumlar_kullanici_id_fkey(ad)").order("olusturma", { ascending: false }).limit(300).then(chk).then(function (rows) {
           return rows.map(function (r) { return { id: r.id, postId: r.gonderi_id, uid: r.kullanici_id, ad: (r.profiller || {}).ad || "Gezgin", metin: r.metin, t: Date.parse(r.olusturma) }; });
         });
       },
