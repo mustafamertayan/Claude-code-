@@ -725,6 +725,18 @@ a { color: var(--accent); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ================= GİRİŞ EKRANI ================= */
+.engel { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 24px; background: #15100d; color: #fff; text-align: center; }
+.engel-kutu { max-width: 380px; display: grid; gap: 14px; justify-items: center; }
+.engel-kutu img { background: #fff; border-radius: 20px; padding: 8px; opacity: .9; }
+.engel h1 { margin: 6px 0 0; font-family: var(--font-display); font-weight: 400; font-size: 1.8rem; }
+.engel p { margin: 0; color: rgba(255,255,255,.78); line-height: 1.5; }
+.engel .btn { min-width: 200px; margin-top: 8px; }
+.ad-ip { margin-top: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); display: grid; gap: 8px; }
+.ad-ip label { display: flex; gap: 10px; align-items: flex-start; font-size: .88rem; }
+.ad-ip label small { display: block; color: var(--muted); }
+.ad-ip .uyari { color: #b07a00; }
+.ad-ip-baslik { margin: 22px 0 4px; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.ad-ip-acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .login { position: fixed; inset: 0; background: #1c1411; color: #fff; overflow: hidden; }
 .login-bg { position: absolute; inset: 0; overflow: hidden; }
 .login-bg img { position: absolute; display: block; max-width: none; user-select: none; -webkit-user-drag: none; }
@@ -1365,6 +1377,14 @@ img.ev-ic { width: 18px; height: 18px; vertical-align: -4px; margin-right: 4px; 
 </style>
 
 <!-- ================= GİRİŞ EKRANI ================= -->
+<section class="engel" id="engel" hidden aria-live="assertive">
+  <div class="engel-kutu">
+    <img src="assets/logo-isaret.png" alt="" width="72" height="72">
+    <h1>Erişimin engellendi</h1>
+    <p id="engel-metin"></p>
+    <button class="btn btn-outline" id="engel-cikis" type="button" hidden>Çıkış yap</button>
+  </div>
+</section>
 <section class="login" id="login" aria-label="Giriş ekranı">
   <div class="login-bg" aria-hidden="true"><img class="lb-blur" src="assets/giris-arka.jpg" alt=""><img class="lb-main" src="assets/giris-arka.jpg" alt=""></div>
   <p class="sr">Her rota bir iz, her iz bir hikâye… Türkiye'nin kültürel haritasını birlikte çiziyoruz!</p>
@@ -1647,6 +1667,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
   ERR["tg/yas"] = "Kültürİz'i kullanmak için en az 13 yaşında olmalısın.";
   ERR["tg/kod"] = "Kod hatalı ya da süresi dolmuş. Kodu kontrol et ya da yeni kod iste.";
   ERR["tg/sikayet-var"] = "Bu gönderiyi zaten şikayet ettin.";
+  ERR["tg/yasak-yok"] = "IP yasağı için yönetici veritabanı güncellemesini (güncelleme-9) çalıştırmalı.";
   ERR["tg/buyuk"] = "Dosya çok büyük. Videolar en fazla 15 MB ve 1 dakika olabilir.";
   ERR["tg/depo-yok"] = "Depolama göstergesi için yönetici veritabanı güncellemesini (güncelleme-8) çalıştırmalı.";
   ERR["tg/oyun-yok"] = "Sıralama tablosu henüz açılmadı. Yönetici veritabanı güncellemesini (güncelleme-7) çalıştırmalı.";
@@ -1681,6 +1702,7 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       else if (/token has expired|token is invalid|otp|invalid token/i.test(m)) c = "tg/kod";
       else if (/mesajlar/i.test(m) && /schema cache|does not exist|could not find/i.test(m)) c = "tg/mesaj-yok";
       else if (/oyun_/i.test(m) && /schema cache|does not exist|could not find/i.test(m)) c = "tg/oyun-yok";
+      else if (/yonetici_(yasakla|yasak_kaldir|ip_listesi|yasakli_ipler|ip_kaldir)/i.test(m) && /schema cache|does not exist|could not find/i.test(m)) c = "tg/yasak-yok";
       else if (/depolama_durumu/i.test(m) && /schema cache|does not exist|could not find/i.test(m)) c = "tg/depo-yok";
       else if (/exceeded the maximum allowed size|payload too large|entity too large/i.test(m)) c = "tg/buyuk";
       else if (/failed to fetch|network/i.test(m)) c = "auth/network-request-failed";
@@ -1689,6 +1711,10 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       var x = new Error(m || "Sunucuya ulaşılamadı. Tekrar dene."); return x;
     }
     function chk(r) { if (r.error) throw sbErr(r.error); return r.data; }
+    function erisim() {
+      return ready.then(function () { return sb.rpc("erisim_kontrol"); })
+        .then(function (r) { return (!r.error && r.data) || { engelli: false }; }, function () { return { engelli: false }; });
+    }
     function toUser(session) {
       var u = session.user, md = u.user_metadata || {};
       // guncelleme-3.sql çalıştırılmadıysa ilgi_alanlari sütunu yoktur; o zaman onsuz oku.
@@ -1722,7 +1748,12 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
             if (ev === "TOKEN_REFRESHED" || ev === "USER_UPDATED") return;
             if (!session) { current = null; return setTimeout(function () { cb(null); }, 0); }
             if (current && current.uid === session.user.id && ev === "SIGNED_IN") return;
-            setTimeout(function () { toUser(session).then(function (u) { current = u; cb(u); }).catch(function () { cb(null); }); }, 0);
+            setTimeout(function () {
+              erisim().then(function (d) {
+                if (d.engelli) { current = null; return cb({ engel: d.neden || "hesap" }); }
+                return toUser(session).then(function (u) { current = u; cb(u); });
+              }).catch(function () { cb(null); });
+            }, 0);
           });
         }).catch(function () { cb(null); toast("Sunucuya bağlanılamadı. İnternet bağlantını kontrol et."); });
       },
@@ -1829,6 +1860,20 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       },
       markRead: function (uid) { return sb.from("mesajlar").update({ okundu: true }).eq("alici_id", current.uid).eq("gonderen_id", uid).eq("okundu", false).then(chk); },
       storage: function () { return sb.rpc("depolama_durumu").then(chk); },
+      access: function () { return erisim(); },
+      userIps: function (uid) {
+        return sb.rpc("yonetici_ip_listesi", { uid: uid }).then(chk).then(function (rows) {
+          return (rows || []).map(function (r) { return { ag: r.ag, t: Date.parse(r.son), paylasan: r.paylasan, yasakli: r.yasakli }; });
+        });
+      },
+      banUser: function (uid, aglar) { return sb.rpc("yonetici_yasakla", { uid: uid, aglar: aglar }).then(chk); },
+      unbanUser: function (uid) { return sb.rpc("yonetici_yasak_kaldir", { uid: uid }).then(chk); },
+      bannedIps: function () {
+        return sb.rpc("yonetici_yasakli_ipler").then(chk).then(function (rows) {
+          return (rows || []).map(function (r) { return { ag: r.ag, ad: r.ad, t: Date.parse(r.olusturma) }; });
+        });
+      },
+      unbanIp: function (ag) { return sb.rpc("yonetici_ip_kaldir", { a: ag }).then(chk); },
       cleanStorage: function (yollar) {
         var seq = Promise.resolve(), n = 0;
         for (var i = 0; i < yollar.length; i += 100) (function (parca) {
@@ -2005,6 +2050,12 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       messages: function () { var me = USER.uid; return Promise.resolve(store.get("tg_mesajlar", []).filter(function (m) { return m.from === me || m.to === me; })); },
       markRead: function (uid) { var me = USER.uid, list = store.get("tg_mesajlar", []); list.forEach(function (m) { if (m.to === me && m.from === uid) m.okundu = true; }); store.set("tg_mesajlar", list); return Promise.resolve(); },
       storage: function () { return Promise.resolve(null); },
+      access: function () { return Promise.resolve({ engelli: false }); },
+      userIps: function () { return Promise.resolve([]); },
+      banUser: function (uid) { return this.setUser(uid, "yasakli", true); },
+      unbanUser: function (uid) { return this.setUser(uid, "yasakli", false); },
+      bannedIps: function () { return Promise.resolve([]); },
+      unbanIp: function () { return Promise.resolve(); },
       cleanStorage: function () { return Promise.resolve(0); },
       saveScore: function (mod, puan) { var l = store.get("tg_oyun", []); l.push({ uid: USER.uid, ad: USER.name, foto: USER.photo || "", mod: mod, puan: puan }); store.set("tg_oyun", l.slice(-500)); return Promise.resolve(); },
       leaders: function (mod) {
@@ -2125,9 +2176,21 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     return L.imageOverlay(asset("assets/fiziki-harita.jpg"), [[WORLD[0][0], WORLD[0][1] + shift], [WORLD[1][0], WORLD[1][1] + shift]], { interactive: false }).addTo(map);
   }
   /* ===================== EKRANLAR ===================== */
-  function showLogin() {
+  var engelNeden = null;
+  function showBan(neden) {
+    engelNeden = neden || "hesap"; USER = null; ST = null; stopMaps(); closeAll();
     document.body.classList.remove("in-app");
-    $("app").hidden = true; $("login").hidden = false;
+    $("app").hidden = true; $("login").hidden = true; $("engel").hidden = false;
+    $("engel-metin").textContent = engelNeden === "ip"
+      ? "Bu bağlantıdan Kültürİz'e erişim yönetici tarafından engellendi. Engel kaldırılana kadar siteye girilemez."
+      : "Hesabın yönetici tarafından yasaklandı. Yasak kaldırılana kadar Kültürİz'i kullanamazsın.";
+    $("engel-cikis").hidden = engelNeden === "ip" && !Veri.signedIn;
+  }
+  $("engel-cikis").addEventListener("click", function () { Veri.signOut(); });
+  function showLogin() {
+    if (engelNeden === "ip") return showBan("ip");
+    document.body.classList.remove("in-app");
+    $("engel").hidden = true; $("app").hidden = true; $("login").hidden = false;
   }
   function showApp() {
     document.body.classList.add("in-app");
@@ -3452,19 +3515,61 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
           '<div class="ad-acts"><button class="btn-sec danger-txt" type="button" data-ad="comment" data-id="' + esc(c.id) + '">Sil</button></div></li>';
       }).join("") + '</ul>' : '<p class="empty">Henüz yorum yok.</p>';
     } else {
-      b.innerHTML = adUsers.length ? '<ul class="ad-list">' + adUsers.map(function (u) {
+      b.innerHTML = (adUsers.length ? '<ul class="ad-list">' + adUsers.map(function (u) {
         var self = u.uid === USER.uid;
-        return '<li>' + avatarHTML(u.ad, "#5b6b78") + '<div class="ad-main"><strong>' + esc(u.ad) + (u.rol === "admin" ? ' <span class="badge-admin">Yönetici</span>' : '') + (u.yasakli ? ' <span class="badge-ban">Kısıtlı</span>' : '') + '</strong>' +
+        return '<li>' + avatarHTML(u.ad, "#5b6b78") + '<div class="ad-main"><strong>' + esc(u.ad) + (u.rol === "admin" ? ' <span class="badge-admin">Yönetici</span>' : '') + (u.yasakli ? ' <span class="badge-ban">Yasaklı</span>' : '') + '</strong>' +
           '<small>' + esc(u.eposta || "") + '</small>' +
           (u.okul ? '<small>' + esc(u.okul) + ' · ' + esc(u.sube || "-") + ' · No ' + esc(u.okulNo || "-") + '</small>' : '<small>Okul bilgisi girilmedi</small>') +
           '<small>' + (u.dogum && u.dogum !== "kurulmadi" ? 'Doğum ' + fmtDate(u.dogum) + ' · ' : '') + 'Katılım ' + fmtDate(u.t) + ' · ' + u.gonderi + ' gönderi · ' + u.yorum + ' yorum</small></div>' +
           (self ? '<div class="ad-acts"><span class="hint" style="margin:0">Sen</span></div>' :
-            '<div class="ad-acts"><button class="btn-sec' + (u.yasakli ? '' : ' danger-txt') + '" type="button" data-ad="ban" data-id="' + esc(u.uid) + '">' + (u.yasakli ? "Kısıtlamayı kaldır" : "Kısıtla") + '</button>' +
+            '<div class="ad-acts"><button class="btn-sec' + (u.yasakli ? '' : ' danger-txt') + '" type="button" data-ad="ban" data-id="' + esc(u.uid) + '">' + (u.yasakli ? "Yasağı kaldır" : "Yasakla") + '</button>' +
             '<button class="btn-sec" type="button" data-ad="rol" data-id="' + esc(u.uid) + '">' + (u.rol === "admin" ? "Yöneticiliği al" : "Yönetici yap") + '</button></div>') + '</li>';
-      }).join("") + '</ul>' : '<p class="empty">Henüz üye yok.</p>';
+      }).join("") + '</ul>' : '<p class="empty">Henüz üye yok.</p>') + '<div id="ad-ipler"></div>';
+      engelliIpCiz();
     }
   }
+  function ipGoster(ag) {
+    // Ekranda adresin yalnızca baş kısmı görünür.
+    if (ag.indexOf(":") >= 0) return ag.split(":").slice(0, 2).join(":") + ":…";
+    var p = ag.split("."); return p[0] + "." + p[1] + ".x.x";
+  }
+  function yasakPaneli(b, u) {
+    var li = b.closest("li"), eski = li.querySelector(".ad-ip"); if (eski) { eski.remove(); return; }
+    var k = document.createElement("div"); k.className = "ad-ip"; k.innerHTML = '<small>Bağlantılar yükleniyor…</small>';
+    li.querySelector(".ad-main").appendChild(k);
+    Veri.userIps(u.uid).catch(function () { return []; }).then(function (ipler) {
+      k.innerHTML = '<strong>' + esc(u.ad) + ' yasaklansın mı?</strong><small>Hesap, sen yasağı kaldırana kadar hiçbir şekilde kullanılamaz.' +
+        (Veri.mode === "cloud" ? ' İşaretlediğin bağlantılardan (IP) da siteye girilemez; başka hesap açsa bile.' : '') + '</small>' +
+        (ipler.length ? ipler.map(function (r, i) {
+          var ortak = r.paylasan > 0;
+          return '<label><input type="checkbox" data-ag="' + esc(r.ag) + '"' + (ortak ? '' : ' checked') + '><span>' + esc(ipGoster(r.ag)) + ' · son ' + esc(fmtDate(r.t)) +
+            (ortak ? '<small class="uyari">Bu bağlantıyı ' + r.paylasan + ' üye daha kullanıyor (okul ya da ev ağı olabilir). Yasaklarsan onlar da giremez.</small>' : '<small>Başka üye kullanmıyor.</small>') + '</span></label>';
+        }).join("") : (Veri.mode === "cloud" ? '<small>Bu üyenin kayıtlı bağlantısı yok; yalnızca hesap yasaklanır.</small>' : '')) +
+        '<div class="ad-ip-acts"><button class="btn-sec danger-txt" type="button" data-yasakla>Yasakla</button><button class="btn-sec" type="button" data-vazgec>Vazgeç</button></div>';
+      k.querySelector("[data-vazgec]").addEventListener("click", function () { k.remove(); });
+      k.querySelector("[data-yasakla]").addEventListener("click", function () {
+        var btn = this, aglar = Array.prototype.map.call(k.querySelectorAll("input[data-ag]:checked"), function (x) { return x.dataset.ag; });
+        btn.disabled = true;
+        Veri.banUser(u.uid, aglar).then(function () {
+          toast(u.ad + " yasaklandı" + (aglar.length ? " (" + aglar.length + " bağlantı engellendi)." : "."));
+          loadAdmin();
+        }).catch(function (err) { btn.disabled = false; toast(errText(err)); });
+      });
+    });
+  }
+  function engelliIpCiz() {
+    var k = $("ad-ipler"); if (!k || Veri.mode !== "cloud") return;
+    Veri.bannedIps().then(function (list) {
+      if (!$("ad-ipler")) return;
+      k.innerHTML = list.length ? '<h3 class="ad-ip-baslik">Engellenen bağlantılar</h3><ul class="ad-list">' + list.map(function (r) {
+        return '<li><div class="ad-main"><strong>' + esc(ipGoster(r.ag)) + '</strong><small>' + esc(r.ad) + ' · ' + esc(fmtDate(r.t)) + '</small></div>' +
+          '<div class="ad-acts"><button class="btn-sec" type="button" data-ipkaldir="' + esc(r.ag) + '">Engeli kaldır</button></div></li>';
+      }).join("") + '</ul>' : '';
+    }).catch(function () { k.innerHTML = ""; });
+  }
   function adminClick(e) {
+    var ipb = e.target.closest("[data-ipkaldir]");
+    if (ipb) { ipb.disabled = true; Veri.unbanIp(ipb.dataset.ipkaldir).then(function () { toast("Bağlantı engeli kaldırıldı."); engelliIpCiz(); }).catch(function (err) { ipb.disabled = false; toast(errText(err)); }); return; }
     var b = e.target.closest("[data-ad]"); if (!b) return;
     var id = b.dataset.id, kind = b.dataset.ad;
     if ((kind === "post" || kind === "comment") && !b.dataset.armed) {
@@ -3478,7 +3583,8 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
     else if (kind === "comment") job = (Veri.mode === "cloud" ? Veri.deleteComment(id) : Veri.deleteCommentAny(id)).then(function () { toast("Yorum silindi."); });
     else {
       var u = adUsers.filter(function (x) { return x.uid === id; })[0];
-      job = kind === "ban" ? Veri.setUser(id, "yasakli", !u.yasakli).then(function () { toast(u.ad + (u.yasakli ? " artık paylaşım yapabilir." : " kısıtlandı.")); })
+      if (kind === "ban" && !u.yasakli) { b.disabled = false; return yasakPaneli(b, u); }
+      job = kind === "ban" ? Veri.unbanUser(id).then(function () { toast(u.ad + " adlı üyenin yasağı ve IP engelleri kaldırıldı."); })
         : Veri.setUser(id, "rol", u.rol === "admin" ? "uye" : "admin").then(function () { toast(u.ad + (u.rol === "admin" ? " artık yönetici değil." : " yönetici yapıldı.")); });
     }
     job.then(loadAdmin).catch(function (err) { b.disabled = false; toast(errText(err)); });
@@ -3704,7 +3810,11 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
   var dataReady = Promise.all([getJSON("data/gonderiler.json"), getJSON("data/mekanlar.json").catch(function () { return []; }), getJSON("data/sehirler.json").catch(function () { return []; })])
     .then(function (r) { MEKANLAR = r[1]; SEHIRLER = r[2]; return r[0]; });
   Veri.onRecovery(function () { openAuth("newpass"); });
+  Veri.access().then(function (d) { if (d.engelli && d.neden === "ip") showBan("ip"); });
   Veri.onChange(function (u) {
+    if (u && (u.engel || (u.yasakli && u.rol !== "admin"))) { Veri.signedIn = true; return showBan(u.engel || "hesap"); }
+    Veri.signedIn = !!u;
+    if (!u && engelNeden === "hesap") { engelNeden = null; Veri.access().then(function (d) { if (d.engelli && d.neden === "ip" && !USER) showBan("ip"); }); }
     USER = u;
     if (!u) { ST = null; stopMaps(); if (location.hash) history.replaceState(null, "", location.pathname + location.search); showLogin(); return; }
     loadState(); applyProfile();
@@ -3715,7 +3825,11 @@ var ORNEK_GONDERILER = true;  // Ayşe, Mehmet ve Elif'in örnek gönderileri ak
       showApp();
       if (welcome) { toast(welcome); welcome = ""; }
       var ek = eksikBilgiler(); if (ek.dogum || ek.okul) openAuth("birth");
-      clearInterval(badgeTimer); badgeTimer = setInterval(function () { if (USER && !document.hidden) rozetGuncelle(); }, 60000);
+      clearInterval(badgeTimer); badgeTimer = setInterval(function () {
+        if (!USER || document.hidden) return;
+        rozetGuncelle();
+        Veri.access().then(function (d) { if (d.engelli && USER) showBan(d.neden); });
+      }, 60000);
     }).catch(function () {
       // Veriler gelmese bile giriş tamamlanır; akış boş gösterilir.
       DATA = DATA || { kullanicilar: {}, gonderiler: [], kaynaklar: {} }; SEED = SEED || []; showApp();

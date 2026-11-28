@@ -85,6 +85,9 @@ Oyundaki mekân fotoğrafları Wikimedia Commons'tandır (`assets/oyun/`, yazar 
 ### 11. Video sınırı ve depolama temizliği
 `supabase/guncelleme-8.sql` dosyasını SQL Editor'de çalıştır. Videolar en fazla 15 MB ve 1 dakika olabilir (fotoğraflar site tarafından zaten küçültülür). Yönetim sayfasında depolama göstergesi (1 GB'ın ne kadarı dolu) görünür. Yönetici Yönetim sayfasını her açtığında, silinmiş gönderilerden, silinmiş hesaplardan, düzenlemede çıkarılan medyadan ve eski profil fotoğraflarından kalan dosyalar depodan kendiliğinden silinir.
 
+### 12. Tam yasaklama (hesap + IP)
+`supabase/guncelleme-9.sql` dosyasını SQL Editor'de çalıştır. Yönetim > Üyeler'de "Yasakla" denince hesap, yönetici yasağı kaldırana kadar hiçbir şekilde kullanılamaz (sunucu tüm tablolara erişimi keser, sitede "Erişimin engellendi" ekranı çıkar). Üyenin bağlandığı IP adresleri listelenir; işaretlenenlerden başka hesapla da girilemez. Aynı IP'yi başka üyeler de kullanıyorsa (okul, ev ağı) uyarı çıkar ve o IP varsayılan olarak işaretlenmez. "Yasağı kaldır" hesabı ve o üyeye ait IP engellerini birlikte kaldırır. Yöneticiler hiçbir engelden etkilenmez.
+
 ### Ücretsiz sınırlar
 Supabase ücretsiz planında 500 MB veritabanı ve 1 GB dosya deposu vardır; video başına en fazla 50 MB yüklenebilir. Kullanılmayan ücretsiz projeler bir hafta hareketsiz kalınca duraklatılır, panelden tek tıkla yeniden açılır.
 
