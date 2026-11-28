@@ -88,6 +88,15 @@ Oyundaki mekân fotoğrafları Wikimedia Commons'tandır (`assets/oyun/`, yazar 
 ### 12. Tam yasaklama (hesap + IP)
 `supabase/guncelleme-9.sql` dosyasını SQL Editor'de çalıştır. Yönetim > Üyeler'de "Yasakla" denince hesap, yönetici yasağı kaldırana kadar hiçbir şekilde kullanılamaz (sunucu tüm tablolara erişimi keser, sitede "Erişimin engellendi" ekranı çıkar). Üyenin bağlandığı IP adresleri listelenir; işaretlenenlerden başka hesapla da girilemez. Aynı IP'yi başka üyeler de kullanıyorsa (okul, ev ağı) uyarı çıkar ve o IP varsayılan olarak işaretlenmez. "Yasağı kaldır" hesabı ve o üyeye ait IP engellerini birlikte kaldırır. Yöneticiler hiçbir engelden etkilenmez.
 
+### 13. Takip, gizli hesap, engelleme, bildirimler ve daha fazlası
+`supabase/guncelleme-10.sql` dosyasını SQL Editor'de çalıştır. Gelenler:
+- **Takip** (profilde Takip et; ana sayfada "Takip ettiklerim" sekmesi; takipçi/takip listeleri) ve **gizli hesap** (Ayarlar; gönderileri yalnızca onaylı takipçiler görür, sunucu da bunu uygular).
+- **Engelleme** (profilde ⋯ > Engelle; engellenen kişi mesaj atamaz, takip edemez, gönderi ve yorumları karşılıklı görünmez) ve Ayarlar > Engellenen kişiler.
+- **Bildirimler** (zil): beğeni, yorum, yanıt, yorum beğenisi, takip, takip isteği (Onayla / Sil).
+- **Yoruma yanıt** ve **yorum beğenme**; **yorum, mesaj ve kullanıcı şikayeti** (şikayet edilen içerik yöneticiye iletilir).
+- **Hesabımı sil** (Ayarlar; her şey kalıcı olarak silinir) ve `gizlilik.html` (Gizlilik ve kurallar).
+- **Anlık mesaj ve bildirim** (Supabase Realtime), akışta **sonsuz kaydırma**, profilde **gezgin pasaportu ve rozetler**, **ana ekrana ekle** (`manifest.webmanifest`, `sw.js`).
+
 ### Ücretsiz sınırlar
 Supabase ücretsiz planında 500 MB veritabanı ve 1 GB dosya deposu vardır; video başına en fazla 50 MB yüklenebilir. Kullanılmayan ücretsiz projeler bir hafta hareketsiz kalınca duraklatılır, panelden tek tıkla yeniden açılır.
 

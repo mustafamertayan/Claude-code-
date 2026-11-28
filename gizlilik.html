@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'">
+<title>Gizlilik ve Kurallar · KültürİZ</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/simge-32.png">
+<style>
+:root { --bg: #f4f3f1; --surface: #fff; --fg: #1a1d20; --muted: #5d656d; --line: #e2e4e3; --accent: #1b5e8c; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0e1012; --surface: #16191c; --fg: #eceef0; --muted: #9aa2aa; --line: #282c31; --accent: #6fb1e0; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-left)) 48px; }
+header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+header img { width: 44px; height: 44px; background: #fff; border-radius: 12px; padding: 4px; }
+h1 { font-size: 1.6rem; margin: 0; }
+h2 { font-size: 1.1rem; margin: 28px 0 6px; }
+p, li { color: var(--fg); }
+.kucuk { color: var(--muted); font-size: .9rem; }
+section { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 4px 18px 14px; margin-top: 14px; }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header><img src="assets/logo-isaret.png" alt=""><h1>Gizlilik ve Kurallar</h1></header>
+  <p class="kucuk">Kültürİz, gezilen tarihî ve kültürel yerlerin paylaşıldığı bir okul projesidir. Bu metin, hangi bilgilerini neden topladığımızı, kimlerin görebildiğini ve haklarını sade bir dille anlatır (6698 sayılı Kişisel Verilerin Korunması Kanunu, KVKK).</p>
+
+  <section>
+    <h2>Hangi bilgileri topluyoruz?</h2>
+    <ul>
+      <li><strong>Hesap bilgileri:</strong> ad soyad, e-posta adresi, şifre (şifren şifrelenmiş olarak saklanır, kimse göremez).</li>
+      <li><strong>Okul bilgileri ve yaş:</strong> okul, şube, okul numarası ve doğum tarihi. Yaşın 13'ten küçükse kayıt olamazsın.</li>
+      <li><strong>Paylaştıkların:</strong> fotoğraf ve videolar, yer adı ve konumu, açıklamalar, yorumlar, beğeniler, mesajlar, takipler.</li>
+      <li><strong>Güvenlik bilgisi:</strong> siteye bağlandığın internet adresi (IP). Yalnızca kurallara uymayan hesapları engellemek için kullanılır.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Kim neyi görebilir?</h2>
+    <ul>
+      <li><strong>Okul bilgilerin, doğum tarihin, e-postan ve IP adresin</strong> başka üyelere hiçbir zaman gösterilmez. Bunları yalnızca sen ve sitenin yöneticisi görebilir.</li>
+      <li><strong>Gönderilerin</strong> herkese açıktır. Ayarlar'dan <strong>Gizli hesap</strong>'ı açarsan yalnızca onayladığın takipçiler görür.</li>
+      <li><strong>Mesajlarını</strong> yalnızca sen ve mesajlaştığın kişi görür; yönetici de okuyamaz. Bir mesajı şikayet edersen yalnızca o mesaj yöneticiye iletilir.</li>
+      <li>Bir kişiyi <strong>engellersen</strong> sana mesaj atamaz, seni takip edemez, gönderilerini ve yorumlarını göremez.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Bilgilerin nerede saklanır?</h2>
+    <p>Bilgilerin, site altyapısı olarak kullanılan Supabase'in sunucularında saklanır. Bilgilerin satılmaz, reklam için kullanılmaz ve kimseyle paylaşılmaz.</p>
+  </section>
+
+  <section>
+    <h2>Hakların</h2>
+    <ul>
+      <li>Profil bilgilerini istediğin zaman <strong>Profil &gt; Profili düzenle</strong>'den değiştirebilirsin.</li>
+      <li>Hesabını ve tüm verilerini <strong>Ayarlar &gt; Hesabımı sil</strong>'den kalıcı olarak silebilirsin. Gönderilerin, fotoğrafların, yorumların, beğenilerin, mesajların ve takiplerin silinir.</li>
+      <li>18 yaşından küçüksen, siteyi velinin bilgisi dahilinde kullanmanı öneririz.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Topluluk kuralları</h2>
+    <ul>
+      <li>Saygılı ol. Hakaret, küfür, taciz, zorbalık ve nefret söylemi yasaktır; küfürler otomatik olarak sansürlenir.</li>
+      <li>Yalnızca kendi çektiğin ya da paylaşma hakkın olan fotoğraf ve videoları paylaş.</li>
+      <li>Kendinin ya da başkalarının adres, telefon gibi özel bilgilerini paylaşma.</li>
+      <li>Uygunsuz bir gönderi, yorum, mesaj ya da kullanıcı görürsen <strong>Şikayet et</strong>'e bas.</li>
+      <li>Kurallara uymayan hesaplar yönetici tarafından kalıcı olarak yasaklanabilir.</li>
+    </ul>
+  </section>
+
+  <p class="kucuk" style="margin-top:24px"><a href="./">Kültürİz'e dön</a></p>
+</main>
+</body>
+</html>

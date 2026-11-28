@@ -1,0 +1,16 @@
+{
+  "name": "KültürİZ",
+  "short_name": "KültürİZ",
+  "description": "Gezdiğin tarihi ve kültürel yerleri paylaş.",
+  "lang": "tr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1c1411",
+  "theme_color": "#1b5e8c",
+  "icons": [
+    { "src": "assets/simge-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/simge-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/simge-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
